@@ -28,6 +28,34 @@
                 (fn [exception] (async/>!! response-channel exception)))
     response-channel))
 
+(defn set-or-update-value
+  [m key initial-value update-value-fn]
+  (if (nil? (get-in m key))
+    (assoc-in m key initial-value)
+    (update-in m key update-value-fn)))
+
+(defn aggregate-answer-tags
+  [tags answered? tags-stats]
+  (reduce
+   (fn [acc tag]
+     (let [stats-with-total (set-or-update-value acc [tag :total] 1 inc)]
+       (if answered?
+         (set-or-update-value stats-with-total [tag :answered] 1 inc)
+         (set-or-update-value stats-with-total [tag :answered] 0 identity))))
+   tags-stats
+   tags))
+
+(defn aggregate-tags
+  [answers-given]
+  (loop [answers answers-given
+         tags-stats {}]
+    (if (empty? answers)
+      tags-stats
+      (let [[{answered? :is_answered tags :tags} & remaining-answers] answers]
+        (recur
+         remaining-answers
+         (aggregate-answer-tags tags answered? tags-stats))))))
+
 (defn fetch-answers
   [response]
   (let [answers (get-in response [:body :items])]
@@ -39,7 +67,7 @@
     (->> tags
          (map search-for-tag)
          doall
-         (map (comp fetch-answers async/<!!)))))
+         (mapcat (comp aggregate-tags fetch-answers async/<!!)))))
 
 (defroutes api-routes
   (GET "/search" [tag] (response (search-for-tags tag))))
