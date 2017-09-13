@@ -21,23 +21,13 @@
                         :site "stackoverflow"
                         :key (env :api-key)})
 
-(defn search-by-tag
-  [tag]
-  (let [response-channel (async/chan)
-        query-params (assoc search-api-params :tagged tag)]
-    (http/get search-api-url
-                (assoc default-http-options :query-params query-params)
-                (fn [response] (async/>!! response-channel response))
-                (fn [exception] (async/>!! response-channel exception)))
-    response-channel))
-
 (defn set-or-update-value
   [m key initial-value update-value-fn]
   (if (nil? (get-in m key))
     (assoc-in m key initial-value)
     (update-in m key update-value-fn)))
 
-(defn aggregate-answer-tags
+(defn aggregate-question-tags
   [tags-stats {answered? :is_answered tags :tags}]
   (reduce
    (fn [tags-stats tag]
@@ -49,13 +39,23 @@
    tags))
 
 (defn aggregate-tags
-  [answers]
-  (reduce aggregate-answer-tags {} answers))
+  [questions]
+  (reduce aggregate-question-tags {} questions))
 
-(defn fetch-answers
+(defn fetch-questions
   [response]
-  (let [answers (get-in response [:body :items])]
-    (map #(select-keys % [:is_answered :tags]) answers)))
+  (let [questions (get-in response [:body :items])]
+    (map #(select-keys % [:is_answered :tags]) questions)))
+
+(defn search-by-tag
+  [tag]
+  (let [response-channel (async/chan)
+        query-params (assoc search-api-params :tagged tag)]
+    (http/get search-api-url
+              (assoc default-http-options :query-params query-params)
+              (fn [response] (async/>!! response-channel response))
+              (fn [exception] (async/>!! response-channel exception)))
+    response-channel))
 
 (defn search-by-tags
   [tags]
