@@ -62,7 +62,9 @@
   (http/with-async-connection-pool {:threads max-http-connections}
     (->> tags
          (map search-by-tag)
-         (mapcat (comp aggregate-tags fetch-answers async/<!!)))))
+         doall
+         (mapcat (comp fetch-questions async/<!!))
+         aggregate-tags)))
 
 (defroutes api-routes
   (GET "/search" [tag] (response (search-by-tags tag))))
