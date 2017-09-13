@@ -38,10 +38,10 @@
     (update-in m key update-value-fn)))
 
 (defn aggregate-answer-tags
-  [tags answered? tags-stats]
+  [tags-stats {answered? :is_answered tags :tags}]
   (reduce
-   (fn [acc tag]
-     (let [stats-with-total (set-or-update-value acc [tag :total] 1 inc)]
+   (fn [tags-stats tag]
+     (let [stats-with-total (set-or-update-value tags-stats [tag :total] 1 inc)]
        (if answered?
          (set-or-update-value stats-with-total [tag :answered] 1 inc)
          (set-or-update-value stats-with-total [tag :answered] 0 identity))))
@@ -49,15 +49,8 @@
    tags))
 
 (defn aggregate-tags
-  [answers-given]
-  (loop [answers answers-given
-         tags-stats {}]
-    (if (empty? answers)
-      tags-stats
-      (let [[{answered? :is_answered tags :tags} & remaining-answers] answers]
-        (recur
-         remaining-answers
-         (aggregate-answer-tags tags answered? tags-stats))))))
+  [answers]
+  (reduce aggregate-answer-tags {} answers))
 
 (defn fetch-answers
   [response]
@@ -69,7 +62,6 @@
   (http/with-async-connection-pool {:threads max-http-connections}
     (->> tags
          (map search-by-tag)
-         doall
          (mapcat (comp aggregate-tags fetch-answers async/<!!)))))
 
 (defroutes api-routes
