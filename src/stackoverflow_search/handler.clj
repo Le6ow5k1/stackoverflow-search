@@ -7,7 +7,13 @@
             [clojure.core.async :as async]
             [environ.core :refer [env]]))
 
+(def proxy-host (env :proxy-host))
+(def proxy-port (env :proxy-port))
 (def max-http-connections (-> (env :max-http-connections) Integer/parseInt))
+(def default-http-options (let [general-options {:async? true :as :json}]
+                            (if (and proxy-host proxy-port)
+                              (merge general-options {:proxy-host proxy-host :proxy-port proxy-port})
+                              general-options)))
 (def search-api-url "https://api.stackexchange.com/2.2/search")
 (def search-api-params {:pagesize 100
                         :order "desc"
@@ -20,7 +26,7 @@
   (let [response-channel (async/chan)
         query-params (assoc search-api-params :tagged tag)]
     (http/get search-api-url
-                {:async? true :query-params query-params :as :json}
+                (assoc default-http-options :query-params query-params)
                 (fn [response] (async/>!! response-channel response))
                 (fn [exception] (async/>!! response-channel exception)))
     response-channel))
