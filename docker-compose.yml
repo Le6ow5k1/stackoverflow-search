@@ -1,0 +1,35 @@
+version: '2'
+
+services:
+  clojure:
+    image: clojure:latest
+    command: bash
+
+  app:
+    extends:
+      service: clojure
+    working_dir: /app
+    volumes:
+      - .:/app
+      - $HOME/.m2:/root/.m2
+
+  test:
+    extends:
+      service: app
+    command: lein test
+
+  web:
+    extends:
+      service: app
+    command: lein ring server-headless
+    ports:
+      - 3000:3000
+
+  web-prod:
+    extends:
+      service: app
+    command: java -jar target/stackoverflow-search-0.1.0-SNAPSHOT-standalone.jar
+    environment:
+      - PORT=80
+    ports:
+      - 80:80
