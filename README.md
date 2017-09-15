@@ -2,7 +2,7 @@
 
 ## Installation & Usage
 
-For configuration purposes this project uses [environ](https://github.com/weavejester/environ) library. Needed parameters are set in `profiles.cls` file. You can specify yours if you want. Also you redefine them by setting corresponding environment variables.
+For configuration purposes this project uses [environ](https://github.com/weavejester/environ) library. Needed parameters are set in `profiles.clj` file. You can specify yours if you want. Also you can redefine them by setting corresponding environment variables.
 
 ### With docker and docker-compose
 
@@ -19,7 +19,7 @@ To start the server in development mode
 ```
 docker-compose up web
 ```
-Server will be running on http://localhost:3000. You can start make requests http://localhost:3000/search?tag=clojure&tag=java.
+You can start make requests http://localhost:3000/search?tag=clojure&tag=java.
 
 To start the server in production mode
 ```
@@ -41,9 +41,9 @@ lein test
 
 To start the server in development mode
 ```
-lein ring server
+lein ring server-headless
 ```
-This will open a browser at http://localhost:3000. You can start make requests http://localhost:3000/search?tag=clojure&tag=java.
+You can start make requests http://localhost:3000/search?tag=clojure&tag=java.
 
 To start the server in production mode
 ```
