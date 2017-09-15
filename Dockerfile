@@ -6,3 +6,4 @@ COPY project.clj /usr/src/app/
 RUN lein deps
 COPY . /usr/src/app
 RUN lein ring uberjar
+COPY target /usr/src/app/target
