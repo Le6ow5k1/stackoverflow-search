@@ -72,5 +72,5 @@
 (def app
   (routes
    (-> api-routes
-       (wrap-routes wrap-json-response)
+       (wrap-routes wrap-json-response {:pretty true})
        (wrap-defaults api-defaults))))
